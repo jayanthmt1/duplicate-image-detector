@@ -8,6 +8,7 @@
 const { bandKeys, findCommonBands } = require('./bands');
 const { METHODS } = require('./fingerprint');
 const { createHammingIndex } = require('./nearest');
+const { groupDuplicates } = require('./match');
 
 const DEFAULT_METHOD = 'dhash64';
 // 50 of 64 bits agree (at most 14 differ): the 1% false-match cut measured for dhash64 with the
@@ -73,7 +74,9 @@ function allPairs(reps, method, threshold) {
  *   search     'auto' (default: 'all' up to maxAllPairs images, else 'bands'), 'all' or 'bands'
  *   maxAllPairs (default 20000); bands (default 8), skipCommon (default true), maxShare (0.01)
  *              apply to the band search only.
- * Returns { exact: [[id, ...]], near: [{ a, b, similarity }] (best first), search, skippedKeys }.
+ * Returns { exact: [[id, ...]], near: [{ a, b, similarity }] (best first), clusters: [[id, ...]],
+ *           search, skippedKeys }. `clusters` joins exact groups and near pairs transitively
+ *           (largest first), one entry per group of images that are all connected by matches.
  */
 function findDuplicates(items, opts = {}) {
   const method = opts.method ?? DEFAULT_METHOD;
@@ -108,7 +111,8 @@ function findDuplicates(items, opts = {}) {
   else ({ near, skipped: skippedKeys } = bandPairs(reps, method, def, threshold, opts));
 
   near.sort((p, q) => q.similarity - p.similarity || String(p.a).localeCompare(String(q.a)) || String(p.b).localeCompare(String(q.b)));
-  return { exact, near, search, skippedKeys };
+  const clusters = groupDuplicates(near, exact);
+  return { exact, near, clusters, search, skippedKeys };
 }
 
 module.exports = { findDuplicates, DEFAULT_METHOD, DEFAULT_THRESHOLD };

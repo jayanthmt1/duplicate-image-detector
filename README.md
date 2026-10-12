@@ -9,7 +9,7 @@ Find duplicate and near-duplicate images in Node.js. It fingerprints each image 
 
 - **Zero dependencies:** pure JavaScript, with no native add-ons, WASM, AI or network calls. Node.js 18 or later.
 - **Deterministic:** the same image gives the same fingerprint on every machine.
-- **Tuned for line art:** diagrams, equations, chemical structures, charts, scanned book pages and exam questions. It also works on photos.
+- **Tuned for line art:** diagrams, equations, chemical structures, charts, scanned book pages and exam questions. It works on photos too, but it is not built for consumer photo libraries, where faces, crops and edits need different tools.
 - **Exact and near matches:** `pixelSha` says when two files hold identical pixels. Perceptual hashes rank likely duplicates for a person to review.
 
 ## Install
@@ -40,7 +40,37 @@ did.compare(a, b);
 // { pixelSha: false, dhash64: 0.94, ahash64: 0.97 }   1 = identical, about 0.5 = unrelated
 ```
 
-To search a stored collection for the closest matches to a new image, see [Searching a collection](#searching-a-collection).
+## Check a new upload against your collection
+
+`createMatchIndex` holds the fingerprints of everything you have, and answers "which stored images match this one?" with a tier and the reasons:
+
+```js
+const did = require('duplicate-image-detector');
+const opts = { preset: 'scan', methods: ['pixelSha', 'dhash64', 'ahash64'], maxPixels: 20_000_000 };
+
+// Once, at startup: load stored fingerprints (180,000 take under a second).
+const index = did.createMatchIndex();
+for (const row of storedRows) index.add(row.id, row.fp);
+
+// Per upload:
+const fp = did.fingerprint(uploadBuffer, opts);
+const matches = index.query(fp, { k: 5 });
+// [{ id: 'q123', tier: 'likely', scores: { dhash64: 0.91, ahash64: 0.88 },
+//    reasons: ['dhash64 0.906 (58/64 bits agree) >= likely 0.8'] }, ...]
+index.add(newId, fp);                      // grows in place; index.remove(id) when deleted
+```
+
+| Tier | Rule (defaults) | On real exam pairs (`scan` preset) | Use it for |
+|---|---|---|---|
+| `exact` | identical decoded pixels (`pixelSha`) | — | automatic decisions |
+| `likely` | `dhash64` ≥ 0.80 | 14 of 26 duplicates (with exact), 0 of 600 random pairs | review, shown first |
+| `possible` | `dhash64` ≥ 0.72 or `ahash64` ≥ 0.75 | 20 of 26 duplicates, 5 of 600 random pairs | review, lower priority |
+
+Only `exact` is safe to act on automatically. Different questions often reuse the same figure (2 of 104 different-question pairs were `exact`), so combine image tiers with your own text or metadata checks. The thresholds were measured on a small set (26 pairs); override them with `createMatchIndex({ thresholds: { likely: { dhash64: 0.82 } } })` once you have measured your own data with `evaluate`. `classifyMatch(fpA, fpB)` gives the same decision for a single pair.
+
+A query against 180,000 stored images takes about 2 ms. All fingerprints in one index must use the same preset; adding one from another preset throws an error, because their perceptual hashes are not comparable.
+
+To search a stored collection by a single hash instead, see [Searching a collection](#searching-a-collection).
 
 ## Features
 
@@ -51,7 +81,8 @@ To search a stored collection for the closest matches to a new image, see [Searc
 | Normalisation | presets `none`, `photo`, `lineart`, `scan`: Otsu/Sauvola, background removal, speckle removal, trim, deskew, Zhang–Suen thinning |
 | Fingerprints | `fileSha`, `pixelSha`, `ahash64`, `dhash64`, `dhash256`, `phash64`, `goldberg`, `ink16`, `inkmap32`, **`chamfer64`**, **`edgehist`** |
 | Compare | equality, Hamming, normalised L2, ink overlap with tolerance, **chamfer distance** (Felzenszwalb–Huttenlocher distance transform), SSIM |
-| Search | **`nearestByHamming` / `createHammingIndex`** (brute force, exact), `findDuplicates`, `bandKeys`, `findCommonBands` |
+| Decisions | **`createMatchIndex`** (exact / likely / possible tiers with reasons), `classifyMatch`, `groupDuplicates` (clusters) |
+| Search | `nearestByHamming` / `createHammingIndex` (brute force, exact; grows with `add`), `findDuplicates`, `bandKeys`, `findCommonBands` |
 | Batches | **`fingerprintMany` / `createPool`**: worker threads, 2 by default, one job per worker in flight |
 | Evaluation | harness, synthetic variant generator, `evaluateFolder` |
 | CLI | **`duplicate-image-detector fingerprint | compare | dupes | eval`** |
@@ -178,7 +209,9 @@ npx duplicate-image-detector dupes ./bank --json dupes.json          # scan + dh
 npx duplicate-image-detector eval ./sample --limit 300 --presets lineart,scan
 ```
 
-`fingerprint` writes one JSON line per image, in input order. `dupes` prints exact groups (identical pixels across formats) and near-duplicate candidates for review. Up to 20,000 images it compares every pair; above that it narrows the search with band keys (`--search all` forces the exact search). Every command takes `--max-pixels N`.
+`fingerprint` writes one JSON line per image, in input order. `dupes` prints exact groups (identical pixels across formats), near-duplicate candidates for review, and clusters of images connected by matches.
+
+Clusters are transitive: if A matches B and B matches C, all three form one cluster even when A and C look nothing alike. One weak match can therefore join two unrelated groups (near-blank or tiny images are the usual cause). Use clusters for an overview and decide pair by pair. Up to 20,000 images it compares every pair; above that it narrows the search with band keys (`--search all` forces the exact search). Every command takes `--max-pixels N`.
 
 ## Batches
 

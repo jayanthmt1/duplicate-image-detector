@@ -113,6 +113,10 @@ async function cmdDupes(a) {
   console.log(`\nNear-duplicate candidates (similarity >= ${threshold}, for human review): ${res.near.length}`);
   for (const p of res.near.slice(0, 100)) console.log(`  ${p.similarity.toFixed(3)}  ${rel(p.a)}  ~  ${rel(p.b)}`);
   if (res.near.length > 100) console.log(`  ... ${res.near.length - 100} more (use --json for all)`);
+  const multi = res.clusters.filter((c) => c.length > 2).length;
+  console.log(`\nClusters (images connected by exact or near matches): ${res.clusters.length}${multi ? `, ${multi} with 3 or more images` : ''}`);
+  for (const c of res.clusters.slice(0, 20)) console.log(`  [${c.length}] ${c.map(rel).join('  ')}`);
+  if (res.clusters.length > 20) console.log(`  ... ${res.clusters.length - 20} more (use --json for all)`);
   if (res.skippedKeys.length) console.log(`\nSkipped ${res.skippedKeys.length} over-common band keys (e.g. near-blank images).`);
   if (errors.length) console.log(`\n${errors.length} files could not be read (see --json).`);
 }

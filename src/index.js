@@ -25,6 +25,7 @@ const { createPool, fingerprintMany } = require('./batch');
 const { evaluateFolder, listImages } = require('./eval/folder');
 const { findDuplicates } = require('./dupes');
 const { createHammingIndex, nearestByHamming } = require('./nearest');
+const { classifyMatch, createMatchIndex, groupDuplicates, DEFAULT_THRESHOLDS, TIERS } = require('./match');
 const { variants, makeVariant, makeEvalSet, VARIANT_KINDS } = require('./eval/variants');
 
 module.exports = {
@@ -86,6 +87,12 @@ module.exports = {
   createPool,
   fingerprintMany,
   findDuplicates,
+  // decisions
+  classifyMatch,
+  createMatchIndex,
+  groupDuplicates,
+  DEFAULT_THRESHOLDS,
+  TIERS,
   // search
   nearestByHamming,
   createHammingIndex,

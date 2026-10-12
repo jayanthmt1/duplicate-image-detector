@@ -4,3 +4,5 @@ node_modules/
 .DS_Store
 # Internal planning notes (not public)
 SPEC.md
+bench/compare-packages/node_modules/
+bench/compare-packages/bench_small.*

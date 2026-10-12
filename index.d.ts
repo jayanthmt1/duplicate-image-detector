@@ -264,22 +264,81 @@ export function findDuplicates<Id = string>(
     search?: 'auto' | 'all' | 'bands'; maxAllPairs?: number;
     bands?: number; skipCommon?: boolean; maxShare?: number;
   },
-): { exact: Id[][]; near: { a: Id; b: Id; similarity: number }[]; search: 'all' | 'bands'; skippedKeys: CommonBand[] };
+): {
+  exact: Id[][];
+  near: { a: Id; b: Id; similarity: number }[];
+  /** Exact groups and near pairs joined transitively, largest first. */
+  clusters: Id[][];
+  search: 'all' | 'bands';
+  skippedKeys: CommonBand[];
+};
+
+// decisions: tiers, a growable match index, clusters
+export type Tier = 'exact' | 'likely' | 'possible' | 'none';
+export interface Thresholds {
+  likely: { dhash64?: number; ahash64?: number };
+  possible: { dhash64?: number; ahash64?: number };
+}
+export interface MatchDecision {
+  /** exact = identical pixels (safe to automate); likely/possible = for review only. */
+  tier: Tier;
+  scores: { dhash64: number | null; ahash64: number | null };
+  /** null when the two fingerprints used different presets. */
+  preset: string | null;
+  /** Why this tier, e.g. "dhash64 0.891 (57/64 bits agree) >= likely 0.8". */
+  reasons: string[];
+  thresholds: Thresholds;
+}
+/** Defaults measured on real exam-question pairs with the scan preset. */
+export const DEFAULT_THRESHOLDS: Readonly<Thresholds>;
+export const TIERS: Tier[];
+export function classifyMatch(a: Fingerprint, b: Fingerprint, opts?: { thresholds?: Partial<Thresholds> }): MatchDecision;
+
+export interface Match<Id = string> {
+  id: Id;
+  tier: Exclude<Tier, 'none'>;
+  scores: { dhash64: number | null; ahash64: number | null };
+  reasons: string[];
+}
+export interface MatchIndex<Id = string> {
+  readonly size: number;
+  /** Taken from the first fingerprint added (or opts.preset); every fingerprint must match it. */
+  readonly preset: string | null;
+  readonly thresholds: Thresholds;
+  add(id: Id, fp: Fingerprint): MatchIndex<Id>;
+  addMany(items: Iterable<{ id: Id; fp: Fingerprint } | [Id, Fingerprint]>): MatchIndex<Id>;
+  remove(id: Id): boolean;
+  has(id: Id): boolean;
+  /** Best first: exact, then likely, then possible (each by highest score). */
+  query(fp: Fingerprint, opts?: { k?: number; minTier?: 'exact' | 'likely' | 'possible'; excludeId?: Id }): Match<Id>[];
+}
+export function createMatchIndex<Id = string>(opts?: { thresholds?: Partial<Thresholds>; preset?: Preset }): MatchIndex<Id>;
+/** Union-find over pairs (and known groups): connected ids, largest group first, singletons left out. */
+export function groupDuplicates<Id = string>(pairs?: ({ a: Id; b: Id } | [Id, Id])[], groups?: Id[][]): Id[][];
 
 // brute-force nearest-match search over bit hashes
 export interface NearestMatch<Id = string | number> { index: number; id: Id; distance: number; similarity: number }
 export interface HammingIndex<Id = string | number> {
-  size: number;
-  bits: number;
-  /** Memory used by the packed hashes (8 bytes per 64-bit hash). */
-  bytes: number;
+  readonly size: number;
+  readonly bits: number;
+  /** Memory used by the packed hashes (8 bytes per 64-bit hash, plus spare room after add()). */
+  readonly bytes: number;
+  /** Add a hash; returns its position. The index grows without rebuilding. */
+  add(hash: string | { id?: Id; hash: string }): number;
+  /** Remove every entry with this id; returns how many were removed. */
+  remove(id: Id): number;
+  /** Every hash with similarity >= minSimilarity, best first. */
+  within(query: string, minSimilarity: number): NearestMatch<Id>[];
   /** The k most similar hashes (default 10) with similarity >= minSimilarity, best first. */
   nearest(query: string, opts?: { k?: number; minSimilarity?: number }): NearestMatch<Id>[];
   /** Every pair with similarity >= minSimilarity (default 0.8). */
   pairs(opts?: { minSimilarity?: number }): { a: Id; b: Id; distance: number; similarity: number }[];
 }
 /** Pack hashes (hex strings or { id, hash }) once for repeated searches. */
-export function createHammingIndex<Id = string | number>(hashes: Iterable<string | { id?: Id; hash: string }>): HammingIndex<Id>;
+export function createHammingIndex<Id = string | number>(
+  hashes?: Iterable<string | { id?: Id; hash: string }>,
+  opts?: { bits?: number },
+): HammingIndex<Id>;
 /** One-off brute-force search: about 1 ms per query over 180k 64-bit hashes. */
 export function nearestByHamming<Id = string | number>(
   query: string,
@@ -324,6 +383,8 @@ declare const ic: {
   edgeHistogram: typeof edgeHistogram; edgeSimilarity: typeof edgeSimilarity;
   createPool: typeof createPool; fingerprintMany: typeof fingerprintMany; findDuplicates: typeof findDuplicates;
   createHammingIndex: typeof createHammingIndex; nearestByHamming: typeof nearestByHamming;
+  classifyMatch: typeof classifyMatch; createMatchIndex: typeof createMatchIndex; groupDuplicates: typeof groupDuplicates;
+  DEFAULT_THRESHOLDS: typeof DEFAULT_THRESHOLDS; TIERS: typeof TIERS;
   evaluateFolder: typeof evaluateFolder; listImages: typeof listImages;
   sniffFormat: typeof sniffFormat; encodePng: typeof encodePng;
   flatten: typeof flatten; toGray: typeof toGray; resize: typeof resize; limitSize: typeof limitSize;

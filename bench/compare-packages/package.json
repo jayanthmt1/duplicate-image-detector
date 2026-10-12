@@ -1,0 +1,16 @@
+{
+  "name": "duplicate-image-detector-benchmark",
+  "private": true,
+  "description": "Dev-only benchmark comparing duplicate-image-detector with other npm image hashing / comparison packages. Not published.",
+  "type": "commonjs",
+  "scripts": {
+    "bench": "node compare.js"
+  },
+  "devDependencies": {
+    "blockhash-core": "0.1.0",
+    "image-hash": "7.0.1",
+    "imghash": "1.1.4",
+    "looks-same": "10.0.1",
+    "pixelmatch": "8.0.0"
+  }
+}

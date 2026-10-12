@@ -1,6 +1,6 @@
 {
   "name": "duplicate-image-detector",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Find duplicate and near-duplicate images in Node.js with perceptual hashing (dHash, aHash, pHash). Zero dependencies, pure JavaScript, deterministic. Tuned for line art, diagrams, scanned documents and exam questions.",
   "keywords": [
     "duplicate-images",

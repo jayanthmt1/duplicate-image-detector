@@ -3,6 +3,16 @@
 Fingerprint format version (`v`) is still 1: no method's output changed between milestones; new
 methods were added alongside. The test suite pins digests of every method's output to enforce this.
 
+## 0.5.0 (2026-10-12)
+
+Decision-grade matching for checking uploads against a collection. Fingerprint outputs are unchanged (still `v: 1`), so stored fingerprints remain valid.
+
+- `classifyMatch(a, b)`: a tier (`exact`, `likely`, `possible`, `none`) with the scores, preset, thresholds and plain-language reasons. Default thresholds were measured on real exam-question pairs with the `scan` preset: `likely` = dhash64 ≥ 0.80, `possible` = dhash64 ≥ 0.72 or ahash64 ≥ 0.75.
+- `createMatchIndex()`: a growable index (`add`, `addMany`, `remove`, `has`) that returns matching stored images best first (exact, likely, possible). About 2 ms per query over 180,000 images. Rejects fingerprints from a different preset or version.
+- `groupDuplicates(pairs, groups)`: clusters via union-find. `findDuplicates` now returns `clusters`, and the CLI `dupes` command prints them.
+- `createHammingIndex`: now grows with `add()`, supports `remove(id)` and `within(query, minSimilarity)`, and can start empty (`{ bits: 64 }` or size taken from the first hash).
+- README: "Check a new upload against your collection" section and clearer positioning (line art and documents, not consumer photo libraries).
+
 ## 0.4.1 (2026-10-12)
 
 - Added repository, homepage and issue links (source now on GitHub). No code changes.

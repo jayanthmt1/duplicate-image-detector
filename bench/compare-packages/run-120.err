@@ -1,0 +1,33 @@
+synthetic set (120 base diagrams)...
+  duplicate-image-detector none+dhash64: 1161/1200
+  duplicate-image-detector none+ahash64: 1160/1200
+  duplicate-image-detector none+phash64: 1182/1200
+  duplicate-image-detector lineart+dhash64: 1200/1200
+  duplicate-image-detector lineart+ahash64: 1200/1200
+  duplicate-image-detector lineart+phash64: 1200/1200
+  duplicate-image-detector scan+dhash64: 1199/1200
+  duplicate-image-detector scan+ahash64: 1200/1200
+  duplicate-image-detector scan+phash64: 1198/1200
+  image-hash 16 (precise): 836/1200
+  imghash 16: 841/1200
+  blockhash-core 16: 841/1200
+  pixelmatch (both resized to 256x256): 559/1200
+  looks-same (both resized to 256x256): 317/1200
+      117.70 real       120.54 user         2.12 sys
+          1256816640  maximum resident set size
+                   0  average shared memory size
+                   0  average unshared data size
+                   0  average unshared stack size
+              160238  page reclaims
+                1919  page faults
+                   0  swaps
+                   0  block input operations
+                   0  block output operations
+                   0  messages sent
+                   0  messages received
+                   0  signals received
+                 344  voluntary context switches
+              244476  involuntary context switches
+       2008146687350  instructions retired
+        485523963754  cycles elapsed
+          1369369952  peak memory footprint
