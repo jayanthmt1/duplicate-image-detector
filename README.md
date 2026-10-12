@@ -1,5 +1,10 @@
 # duplicate-image-detector
 
+[![npm version](https://img.shields.io/npm/v/duplicate-image-detector.svg)](https://www.npmjs.com/package/duplicate-image-detector)
+[![license: MIT](https://img.shields.io/npm/l/duplicate-image-detector.svg)](LICENSE)
+[![node](https://img.shields.io/node/v/duplicate-image-detector.svg)](https://www.npmjs.com/package/duplicate-image-detector)
+[![dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](package.json)
+
 Find duplicate and near-duplicate images in Node.js. It fingerprints each image with perceptual hashes (dHash, aHash, pHash) and compares the fingerprints. That finds the same picture across PNG, JPEG, GIF and BMP files, at different sizes, with extra margins, on grey scanned paper or slightly rotated.
 
 - **Zero dependencies:** pure JavaScript, with no native add-ons, WASM, AI or network calls. Node.js 18 or later.
