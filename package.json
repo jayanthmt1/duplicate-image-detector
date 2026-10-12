@@ -1,0 +1,72 @@
+{
+  "name": "duplicate-image-detector",
+  "version": "0.4.1",
+  "description": "Find duplicate and near-duplicate images in Node.js with perceptual hashing (dHash, aHash, pHash). Zero dependencies, pure JavaScript, deterministic. Tuned for line art, diagrams, scanned documents and exam questions.",
+  "keywords": [
+    "duplicate-images",
+    "duplicate-image-detection",
+    "near-duplicate",
+    "image-dedupe",
+    "image-deduplication",
+    "perceptual-hash",
+    "image-hash",
+    "dhash",
+    "ahash",
+    "phash",
+    "image-similarity",
+    "image-fingerprint",
+    "find-duplicates",
+    "line-art",
+    "diagram",
+    "scanned-documents",
+    "png",
+    "jpeg",
+    "gif",
+    "bmp",
+    "zero-dependency"
+  ],
+  "author": "Jayanth",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jayanthmt1/duplicate-image-detector.git"
+  },
+  "homepage": "https://github.com/jayanthmt1/duplicate-image-detector#readme",
+  "bugs": {
+    "url": "https://github.com/jayanthmt1/duplicate-image-detector/issues"
+  },
+  "main": "./index.js",
+  "module": "./index.mjs",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "duplicate-image-detector": "bin/duplicate-image-detector.js"
+  },
+  "files": [
+    "index.js",
+    "index.mjs",
+    "index.d.ts",
+    "src/",
+    "bin/",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "fixtures": "node scripts/make-fixtures.js",
+    "bench": "node bench/bench.js",
+    "eval": "node bin/duplicate-image-detector.js eval"
+  },
+  "dependencies": {}
+}
